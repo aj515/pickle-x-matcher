@@ -1390,6 +1390,77 @@
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
 
+  // Apply landing page quick-start (?setup=1) or sample club (?demo=1) parameters in local mode.
+  function applyLaunchParams() {
+    const q = new URLSearchParams(location.search);
+    if (!q.has('demo') && !q.has('setup')) return;
+    if (gate) return; // Cloud login gate handles its own club flow
+    const now = Date.now();
+    const MIN = 60000;
+    if (q.get('demo') === '1') {
+      snap();
+      const theme = S.settings.theme;
+      const d = defaults();
+      d.settings.theme = theme;
+      d.sessionStart = now - 52 * MIN;
+      const rosterSeed = [
+        ['p1', 'Elena Rostova', 4.0, 'playing', 1],
+        ['p2', 'Devon Brooks', 3.5, 'playing', 2],
+        ['p3', 'Marcus Chen', 4.0, 'playing', 3],
+        ['p4', 'Tessa Morales', 3.5, 'playing', 4],
+        ['p5', 'Liam O\'Connor', 4.5, 'playing', 5],
+        ['p6', 'Nadia Patel', 3.5, 'playing', 6],
+        ['p7', 'Samir Haddad', 4.0, 'playing', 7],
+        ['p8', 'Chloe Park', 4.0, 'playing', 8],
+        ['p9', 'Priya Nair', 3.5, 'queue', 9, 14 * MIN],
+        ['p10', 'Maya Lin', 4.0, 'queue', 10, 12 * MIN, 'p11'],
+        ['p11', 'Eli Vance', 3.5, 'queue', 11, 12 * MIN, 'p10'],
+        ['p12', 'Jordan Cole', 3.0, 'queue', 12, 9 * MIN],
+        ['p13', 'Hannah Kim', 4.0, 'queue', 13, 7 * MIN],
+        ['p14', 'Carlos Vega', 3.5, 'queue', 14, 5 * MIN],
+      ];
+      d.seq = 14;
+      d.players = rosterSeed.map(([id, name, level, status, qpos, waitMs, partnerId]) => ({
+        id, name, level, status, qpos,
+        waitSince: waitMs ? now - waitMs : 0,
+        partnerId: partnerId || null,
+      }));
+      d.courts = [
+        { id: 'c1', name: 'Court 1', active: true, king: null, match: { a: ['p1', 'p2'], b: ['p3', 'p4'], start: now - 8 * MIN } },
+        { id: 'c2', name: 'Court 2', active: true, king: null, match: { a: ['p5', 'p6'], b: ['p7', 'p8'], start: now - 4 * MIN } },
+        { id: 'c3', name: 'Court 3', active: true, king: null, match: null },
+        { id: 'c4', name: 'Court 4', active: false, king: null, match: null },
+      ];
+      d.history = [
+        { id: 'g1', court: 'Court 1', a: ['p9', 'p12'], b: ['p10', 'p11'], sa: 9, sb: 11, w: 'b', start: now - 46 * MIN, end: now - 34 * MIN },
+        { id: 'g2', court: 'Court 2', a: ['p13', 'p14'], b: ['p1', 'p4'], sa: 11, sb: 8, w: 'a', start: now - 44 * MIN, end: now - 31 * MIN },
+        { id: 'g3', court: 'Court 1', a: ['p5', 'p8'], b: ['p2', 'p7'], sa: 11, sb: 9, w: 'a', start: now - 30 * MIN, end: now - 18 * MIN },
+        { id: 'g4', court: 'Court 2', a: ['p3', 'p6'], b: ['p10', 'p11'], sa: 8, sb: 11, w: 'b', start: now - 26 * MIN, end: now - 13 * MIN },
+      ];
+      S = d;
+      tab = 'live';
+      save();
+      history.replaceState(null, '', location.pathname);
+      setTimeout(() => toast('Sample club loaded (14 players, 4 courts)', true), 250);
+    } else if (q.get('setup') === '1') {
+      const mode = q.get('mode');
+      const courtsCount = Math.min(12, Math.max(1, parseInt(q.get('courts') || '4', 10) || 4));
+      const teamSize = q.get('teamSize') === '1' ? 1 : 2;
+      const clubName = (q.get('club') || '').trim();
+      snap();
+      if (mode && MODES[mode]) S.settings.mode = mode;
+      S.settings.teamSize = teamSize;
+      if (S.courts.every((c) => !c.match)) {
+        S.courts = Array.from({ length: courtsCount }, (_, i) => newCourt(i + 1));
+      }
+      tab = 'live';
+      save();
+      history.replaceState(null, '', location.pathname);
+      setTimeout(() => toast(clubName ? `${clubName} ready (${courtsCount} courts)` : `Session configured (${courtsCount} courts)`), 250);
+    }
+  }
+
+  applyLaunchParams();
   boot();
   applyWake();
 })();

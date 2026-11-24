@@ -4,65 +4,558 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0A0F0C">
-  <meta name="description" content="Pickle X Matcher — smart open-play queue and court matchmaking for pickleball.">
+  <meta name="description" content="Pickle X Matcher — smart open-play queue, balanced court matchmaking, and live wait-time estimates for pickleball clubs and parks.">
+  <meta property="og:title" content="Pickle X Matcher — Open-Play Queue & Court Matchmaking">
+  <meta property="og:description" content="Replace paddle stacks with automated doubles matchmaking, real-time Smart ETAs, fixed partner locks, and offline-first multi-organizer sync.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PX Matcher">
-  <title>Pickle X Matcher</title>
+  <title>Pickle X Matcher — Smart Open-Play Queue &amp; Court Matchmaking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="landing.css">
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
-        <circle cx="256" cy="256" r="240" fill="var(--accent)"/>
-        <path d="M180 180l152 152M332 180L180 332" stroke="var(--accent-ink)" stroke-width="56" stroke-linecap="round"/>
-      </svg>
-      <span>Pickle <span class="x">X</span> Matcher</span>
-      <span id="sync" class="sync" role="img" hidden></span>
+<body id="top">
+  <!-- Top Bar: Strict 3-zone contract -->
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a href="#top" class="nav-brand">
+        <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+          <circle cx="256" cy="256" r="240" fill="var(--accent)"/>
+          <path d="M180 180l152 152M332 180L180 332" stroke="var(--accent-ink)" stroke-width="56" stroke-linecap="round"/>
+        </svg>
+        <span>Pickle <span class="x">X</span> Matcher</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#demo">Live demo</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#live-board">Live board</a>
+        <a href="#start">Quick start</a>
+      </nav>
+
+      <div class="nav-action">
+        <a href="app" class="btn btn-primary">Launch Matcher</a>
+        <button type="button" id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-drawer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
     </div>
-    <button id="undo" class="btn ghost sm" data-act="undo" hidden>
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
-      Undo
-    </button>
+
+    <nav id="mobile-drawer" class="mobile-drawer" aria-label="Mobile navigation" hidden>
+      <a href="#demo">Live demo</a>
+      <a href="#capabilities">Capabilities</a>
+      <a href="#live-board">Live board</a>
+      <a href="#start">Quick start</a>
+      <a href="app?demo=1">Try sample club</a>
+    </nav>
   </header>
 
-  <main id="view" aria-live="polite"></main>
+  <main>
+    <!-- Section 1: Hero Proposition -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="kicker">
+              <span>Open-play queue &amp; court matchmaking</span>
+              <span class="kicker-sep" aria-hidden="true">/</span>
+              <span>Offline-first PWA</span>
+              <span class="kicker-sep" aria-hidden="true">/</span>
+              <span>No player accounts</span>
+            </div>
 
-  <nav class="tabbar" aria-label="Main">
-    <button data-act="tab" data-tab="live">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18M12 4v16"/></svg>
-      Courts
-    </button>
-    <button data-act="tab" data-tab="players">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1"/><path d="M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg>
-      Players
-    </button>
-    <button data-act="tab" data-tab="stats">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-      Stats
-    </button>
-    <button data-act="tab" data-tab="settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
-      Settings
-    </button>
-  </nav>
+            <h1 class="hero-title">Keep every court moving. Keep every match fair.</h1>
 
-  <div id="sheet-root"></div>
-  <div id="toast" role="status"></div>
-  <input type="file" id="import-file" accept="application/json,.json" hidden>
+            <p class="hero-sub">
+              Replace paddle stacks and whiteboards with automated doubles matchmaking, live wait-time estimates, and multi-organizer phone sync. Players scan a QR code to see their spot—nothing to install.
+            </p>
 
-  <!-- config.js and vendor/supabase.js are generated by `npm run build` (see scripts/build.mjs).
-       If they're missing, the app runs in offline, device-only mode. -->
-  <script src="config.js"></script>
-  <script src="vendor/supabase.js"></script>
+            <div class="hero-actions">
+              <a href="app" class="btn btn-primary btn-lg">Launch Open Play</a>
+              <a href="app?demo=1" class="btn btn-lg">Try 14-player sample club</a>
+            </div>
+
+            <p class="hero-note">Works immediately in your browser with local storage, or sync live across organizers with Supabase.</p>
+          </div>
+
+          <!-- Architectural Live Court Blueprint -->
+          <div class="hero-visual" aria-label="Live court matchmaking visualization">
+            <div class="blueprint-top">
+              <span class="blueprint-title">Court 1 · Smart Balanced Doubles</span>
+              <span class="blueprint-meta mono">Gap 0.00 · <span id="hero-clock">08:14</span></span>
+            </div>
+
+            <div class="court-diagram-wrap">
+              <svg class="court-svg" viewBox="0 0 560 280" role="img" aria-label="Top-down architectural pickleball court showing Team A (Elena 4.0 and Devon 3.5) playing Team B (Marcus 4.0 and Tessa 3.5)">
+                <defs>
+                  <linearGradient id="courtSurface" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#1E4D3B"/>
+                    <stop offset="100%" stop-color="#163A2C"/>
+                  </linearGradient>
+                  <linearGradient id="playArea" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#275C96"/>
+                    <stop offset="100%" stop-color="#1D4879"/>
+                  </linearGradient>
+                </defs>
+                <!-- Out-of-bounds apron -->
+                <rect x="0" y="0" width="560" height="280" rx="10" fill="url(#courtSurface)"/>
+                <!-- Main 44x20 court rectangle -->
+                <rect x="40" y="28" width="480" height="224" fill="url(#playArea)" stroke="#EBF2EB" stroke-width="2.5"/>
+                <!-- Non-Volley Zone (Kitchen) -->
+                <rect x="204" y="28" width="152" height="224" fill="#183A63"/>
+                <line x1="204" y1="28" x2="204" y2="252" stroke="#EBF2EB" stroke-width="2.5"/>
+                <line x1="356" y1="28" x2="356" y2="252" stroke="#EBF2EB" stroke-width="2.5"/>
+                <!-- Centerlines -->
+                <line x1="40" y1="140" x2="204" y2="140" stroke="#EBF2EB" stroke-width="2"/>
+                <line x1="356" y1="140" x2="520" y2="140" stroke="#EBF2EB" stroke-width="2"/>
+                <!-- Net -->
+                <line x1="280" y1="18" x2="280" y2="262" stroke="#C8F03C" stroke-width="3" stroke-dasharray="6 5"/>
+                <circle cx="280" cy="18" r="4" fill="#C8F03C"/>
+                <circle cx="280" cy="262" r="4" fill="#C8F03C"/>
+
+                <!-- Team A Players -->
+                <g transform="translate(64, 54)">
+                  <rect width="124" height="50" rx="8" fill="#0C1510" fill-opacity="0.88" stroke="#6B9BFF" stroke-width="1.5"/>
+                  <text x="12" y="22" fill="#FFFFFF" font-family="DM Sans, sans-serif" font-size="13" font-weight="700">Elena R.</text>
+                  <text x="12" y="39" fill="#9EB1A4" font-family="JetBrains Mono, monospace" font-size="11">Team A · 4.0</text>
+                </g>
+                <g transform="translate(64, 174)">
+                  <rect width="124" height="50" rx="8" fill="#0C1510" fill-opacity="0.88" stroke="#6B9BFF" stroke-width="1.5"/>
+                  <text x="12" y="22" fill="#FFFFFF" font-family="DM Sans, sans-serif" font-size="13" font-weight="700">Devon B.</text>
+                  <text x="12" y="39" fill="#9EB1A4" font-family="JetBrains Mono, monospace" font-size="11">Team A · 3.5</text>
+                </g>
+
+                <!-- Team B Players -->
+                <g transform="translate(372, 54)">
+                  <rect width="124" height="50" rx="8" fill="#0C1510" fill-opacity="0.88" stroke="#FF8A5C" stroke-width="1.5"/>
+                  <text x="12" y="22" fill="#FFFFFF" font-family="DM Sans, sans-serif" font-size="13" font-weight="700">Marcus C.</text>
+                  <text x="12" y="39" fill="#9EB1A4" font-family="JetBrains Mono, monospace" font-size="11">Team B · 4.0</text>
+                </g>
+                <g transform="translate(372, 174)">
+                  <rect width="124" height="50" rx="8" fill="#0C1510" fill-opacity="0.88" stroke="#FF8A5C" stroke-width="1.5"/>
+                  <text x="12" y="22" fill="#FFFFFF" font-family="DM Sans, sans-serif" font-size="13" font-weight="700">Tessa M.</text>
+                  <text x="12" y="39" fill="#9EB1A4" font-family="JetBrains Mono, monospace" font-size="11">Team B · 3.5</text>
+                </g>
+
+                <!-- Pickleball -->
+                <circle cx="242" cy="112" r="7" fill="#C8F03C"/>
+                <circle cx="240" cy="110" r="1.3" fill="#0C1510"/>
+                <circle cx="244" cy="111" r="1.3" fill="#0C1510"/>
+                <circle cx="242" cy="115" r="1.3" fill="#0C1510"/>
+              </svg>
+            </div>
+
+            <div class="blueprint-foot">
+              <div>
+                <strong>Next up: Priya &amp; Jordan vs Maya &amp; Eli (paired)</strong>
+                <span>Guaranteed #1 longest-waiting · 0 repeat partners</span>
+              </div>
+              <div class="blueprint-eta">
+                <b class="mono">~4 min</b>
+                <span>Smart ETA</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full-width 4-Column Quantitative Proof Strip -->
+        <div class="proof-strip" aria-label="Key product metrics">
+          <div class="proof-cell">
+            <div class="proof-val num">0 accounts</div>
+            <div class="proof-lbl">Players scan the venue QR code to track their wait—no app download or signup.</div>
+          </div>
+          <div class="proof-cell">
+            <div class="proof-val num">4 modes</div>
+            <div class="proof-lbl">Switch mid-session between Smart Balanced, Skill Groups, First Come, and Winners Stay.</div>
+          </div>
+          <div class="proof-cell">
+            <div class="proof-val num">&lt; 3 sec</div>
+            <div class="proof-lbl">From recording a final score to calling the next balanced four onto the court.</div>
+          </div>
+          <div class="proof-cell">
+            <div class="proof-val num">100% offline</div>
+            <div class="proof-lbl">Runs locally on park courts with zero reception and syncs when signal returns.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Interactive Matchmaking & Smart ETA Simulator -->
+    <section id="demo" class="section sim-section">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">
+            <span>Interactive courtside preview</span>
+            <span class="kicker-sep" aria-hidden="true">/</span>
+            <span>Real Smart ETA engine</span>
+          </div>
+          <h2>Test the queue rotation before your next session</h2>
+          <p>
+            Finish a live match on Court 1 or Court 2, switch matchmaking modes, or toggle a fixed doubles partner lock. Every rotation runs the same fairness rules and wait-time simulation used in the app.
+          </p>
+        </div>
+
+        <div class="sim-toolbar">
+          <div class="seg-group" role="group" aria-label="Matchmaking mode">
+            <button type="button" class="seg-btn active" data-sim-mode="balanced" aria-pressed="true">Smart Balanced</button>
+            <button type="button" class="seg-btn" data-sim-mode="tiered" aria-pressed="false">Skill Groups</button>
+            <button type="button" class="seg-btn" data-sim-mode="order" aria-pressed="false">First Come</button>
+            <button type="button" class="seg-btn" data-sim-mode="winners" aria-pressed="false">Winners Stay</button>
+          </div>
+
+          <div class="sim-controls-right">
+            <button type="button" id="sim-lock-btn" class="toggle-btn" aria-pressed="true">Fixed partners: Maya &amp; Eli locked</button>
+            <button type="button" id="sim-reset-btn" class="btn btn-sm btn-ghost">Reset demo</button>
+          </div>
+        </div>
+
+        <div class="sim-grid">
+          <div id="sim-courts" class="sim-courts" aria-live="polite"></div>
+
+          <aside class="sim-sidebar" aria-label="Up next and waiting queue">
+            <div id="sim-upnext" class="sim-upnext"></div>
+            <div>
+              <div class="sim-subhead">
+                <h3>Waiting queue</h3>
+                <span>Live Smart ETA</span>
+              </div>
+              <ol id="sim-queue" class="queue-list"></ol>
+            </div>
+          </aside>
+        </div>
+
+        <div class="sim-footer-bar">
+          <span id="sim-status">Click either winner button on Court 1 or Court 2 to rotate players live.</span>
+          <a href="app?demo=1" class="text-link">Open this 14-player club in the full app →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Capabilities Asymmetric Bento Grid -->
+    <section id="capabilities" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">
+            <span>System architecture</span>
+            <span class="kicker-sep" aria-hidden="true">/</span>
+            <span>Built for real open play</span>
+          </div>
+          <h2>Designed around how open-play courts actually run</h2>
+          <p>
+            Four core mechanics eliminate queue politics, uneven blowouts, and crowded organizer desks across community parks and indoor clubs.
+          </p>
+        </div>
+
+        <div class="bento">
+          <!-- 01: Wide Card -->
+          <article class="bento-card span-7">
+            <div>
+              <h3><span class="editorial-idx mono">01.</span>Fairness-First Matchmaking</h3>
+              <p>
+                The longest-waiting player is mathematically locked into the next open court so nobody gets skipped. The remaining spots are selected from a tight look-ahead window to minimize team rating gaps, repeat partners, and back-to-back rematches.
+              </p>
+            </div>
+
+            <table class="algo-table" aria-label="Matchmaking scoring weights">
+              <thead>
+                <tr>
+                  <th>Factor evaluated per match</th>
+                  <th>Priority rule</th>
+                  <th>Relative weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Longest-waiting player (#1)</td>
+                  <td>Always included in next match</td>
+                  <td class="mono">Guaranteed</td>
+                </tr>
+                <tr>
+                  <td>Team skill balance (DUPR delta)</td>
+                  <td>Even combined team ratings</td>
+                  <td class="mono">10.0×</td>
+                </tr>
+                <tr>
+                  <td>Repeat partner avoidance</td>
+                  <td>Fresh partners every rotation</td>
+                  <td class="mono">8.0×</td>
+                </tr>
+                <tr>
+                  <td>Repeat opponent variety</td>
+                  <td>Minimizes immediate rematches</td>
+                  <td class="mono">2.5×</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <!-- 02: Interactive Live Board Preview -->
+          <article id="live-board" class="bento-card span-5">
+            <div>
+              <h3><span class="editorial-idx mono">02.</span>PX Live Board &amp; Smart ETA</h3>
+              <p>
+                Display a venue QR code once. Players tap their name on their phone to see their live wait estimate—and receive a chime and vibration the moment they are called. Append <span class="mono">&amp;tv=1</span> for a clubhouse big-screen board.
+              </p>
+            </div>
+
+            <div class="board-preview-shell">
+              <div class="board-preview-head">
+                <span class="sim-court-meta">Preview mode</span>
+                <div class="seg-group" role="tablist" aria-label="Live Board view mode">
+                  <button type="button" class="seg-btn active" role="tab" aria-selected="true" data-board-tab="phone">Player Phone</button>
+                  <button type="button" class="seg-btn" role="tab" aria-selected="false" data-board-tab="tv">Venue TV</button>
+                </div>
+              </div>
+
+              <div id="board-panel-phone">
+                <div class="board-phone-hero">
+                  <small>Priya Nair · Spot #1 in queue</small>
+                  <strong class="mono">Up in ~4 min</strong>
+                  <span>Chime &amp; vibrate enabled when Court 1 opens</span>
+                </div>
+              </div>
+
+              <div id="board-panel-tv" hidden>
+                <div class="board-tv-grid">
+                  <div class="board-tv-rows">
+                    <div class="board-tv-row">
+                      <strong>Court 1</strong>
+                      <span class="mono">Elena &amp; Devon vs Marcus &amp; Tessa</span>
+                    </div>
+                    <div class="board-tv-row">
+                      <strong>Court 2</strong>
+                      <span class="mono">Liam &amp; Nadia vs Samir &amp; Chloe</span>
+                    </div>
+                    <div class="board-tv-row">
+                      <strong>Next Up</strong>
+                      <span class="mono">Priya · Maya &amp; Eli · Jordan</span>
+                    </div>
+                  </div>
+                  <div id="preview-qr" class="qr-preview" aria-label="Sample venue Live Board QR code"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 03: Fixed Partners & Multi-Organizer Sync -->
+          <article class="bento-card span-5">
+            <div>
+              <h3><span class="editorial-idx mono">03.</span>Fixed Partners &amp; Co-Organizer Sync</h3>
+              <p>
+                Lock two players together for doubles so they move through the queue as a unit and always share the same side of the net. Share a club code so multiple organizers manage different courts simultaneously in real time.
+              </p>
+            </div>
+
+            <div class="spec-list">
+              <div class="spec-item">
+                <strong>Unified partner pairs</strong>
+                <span>Locked duos stay paired across balanced rotations and Winners Stay streaks.</span>
+              </div>
+              <div class="spec-item">
+                <strong>Instant club codes</strong>
+                <span>Co-organizers join with a short code—every score syncs live across phones.</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- 04: Offline-First Courtside Reliability -->
+          <article class="bento-card span-7">
+            <div>
+              <h3><span class="editorial-idx mono">04.</span>Built for Courts With Weak Cell Signal</h3>
+              <p>
+                Public parks rarely have reliable Wi-Fi at court 6. Pickle X Matcher is engineered as a local-first progressive web app: every check-in, court assignment, and score writes immediately to device storage and catches up automatically whenever connectivity returns.
+              </p>
+            </div>
+
+            <div class="spec-list">
+              <div class="spec-item">
+                <strong>One-tap Undo everywhere</strong>
+                <span>Entered a score on the wrong court? Reverse any match or roster edit in a single tap.</span>
+              </div>
+              <div class="spec-item">
+                <strong>Screen Wake Lock</strong>
+                <span>Keep your organizer display awake between games without touching phone power settings.</span>
+              </div>
+              <div class="spec-item">
+                <strong>Session leaderboards</strong>
+                <span>Automatic win-loss records, point differentials, and game logs derived from verified results.</span>
+              </div>
+              <div class="spec-item">
+                <strong>Portable JSON backups</strong>
+                <span>Export or import your full club roster and session history anytime with zero lock-in.</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Proof & Venue Outcomes -->
+    <section class="section proof-section">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">
+            <span>Courtside outcomes</span>
+            <span class="kicker-sep" aria-hidden="true">/</span>
+            <span>Parks, clubs &amp; leagues</span>
+          </div>
+          <h2>Faster turnover from community parks to 12-court clubs</h2>
+        </div>
+
+        <div class="case-grid">
+          <article class="case-col">
+            <div>
+              <div class="case-meta">Sunset Park Open Play · 6 outdoor courts</div>
+              <div class="case-metric num">42 players/night · 0 queue disputes</div>
+              <p class="case-quote">
+                “Our paddle rack caused constant friction whenever 4.5 players mixed with newer folks. Switching to Smart Balanced cut court turnover to seconds and kept everyone rotating evenly.”
+              </p>
+            </div>
+            <div class="case-author">
+              <strong>Ramon Delgado</strong>
+              <span>Open-Play Coordinator, Sunset Park Pickleball</span>
+            </div>
+          </article>
+
+          <article class="case-col">
+            <div>
+              <div class="case-meta">Bayview Indoor Club · 12 indoor courts</div>
+              <div class="case-metric num">+19% more games per 2-hour block</div>
+              <p class="case-quote">
+                “Three organizers now score different wings from their phones while our lobby monitor runs the TV Live Board. Players stopped crowding the desk because their phones chime right before their court opens.”
+              </p>
+            </div>
+            <div class="case-author">
+              <strong>Hannah Sorensen</strong>
+              <span>Operations Lead, Bayview Indoor Pickleball</span>
+            </div>
+          </article>
+
+          <article class="case-col">
+            <div>
+              <div class="case-meta">Oakridge Social League · 4 park courts</div>
+              <div class="case-metric num">100% offline uptime · Instant leaderboards</div>
+              <p class="case-quote">
+                “Our park courts have zero reception. We lock partner duos, switch from Winners Stay to Balanced mid-evening, and export the complete win-loss and point-differential standings as soon as we pack up.”
+              </p>
+            </div>
+            <div class="case-author">
+              <strong>Devon Okafor</strong>
+              <span>League Director, Oakridge Rec Association</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Interactive Quick-Start Club Builder -->
+    <section id="start" class="section start-section">
+      <div class="wrap">
+        <div class="start-grid">
+          <div>
+            <div class="kicker">
+              <span>Ready in 15 seconds</span>
+              <span class="kicker-sep" aria-hidden="true">/</span>
+              <span>Free to run</span>
+            </div>
+            <h2 style="margin-top: 10px; font-size: clamp(1.85rem, 3vw, 2.7rem); line-height: 1.08;">
+              Configure your courts and start open play now
+            </h2>
+            <p style="margin-top: 14px; color: var(--muted); max-width: 48ch;">
+              Pick your court count and rotation style below to open Pickle X Matcher pre-configured for tonight’s session—no signup required.
+            </p>
+            <ul class="start-points">
+              <li>Add players individually or paste your full roster in bulk.</li>
+              <li>Change matchmaking modes, court counts, or fixed partners anytime mid-session.</li>
+              <li>Install to your home screen for full-screen courtside offline access.</li>
+            </ul>
+          </div>
+
+          <form id="quick-start-form" class="builder-form" novalidate>
+            <div class="field">
+              <label for="club-name-input">Club or session name (optional)</label>
+              <input id="club-name-input" class="field-input" type="text" maxlength="60" placeholder="e.g. Tuesday Night Open Play" autocomplete="off">
+            </div>
+
+            <div class="field">
+              <label>Number of active courts</label>
+              <div class="choice-row" role="group" aria-label="Number of active courts">
+                <button type="button" class="choice-btn mono" data-court-choice="2">2</button>
+                <button type="button" class="choice-btn mono active" data-court-choice="4">4</button>
+                <button type="button" class="choice-btn mono" data-court-choice="6">6</button>
+                <button type="button" class="choice-btn mono" data-court-choice="8">8</button>
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div class="field">
+                <label for="start-mode-select">Matchmaking mode</label>
+                <select id="start-mode-select" class="field-select">
+                  <option value="balanced">Smart Balanced</option>
+                  <option value="tiered">Skill Groups</option>
+                  <option value="order">First Come, First Serve</option>
+                  <option value="winners">Winners Stay</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Play format</label>
+                <div class="choice-row" style="grid-template-columns: 1fr 1fr;" role="group" aria-label="Play format">
+                  <button type="button" class="choice-btn active" data-format-choice="2">Doubles</button>
+                  <button type="button" class="choice-btn" data-format-choice="1">Singles</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="start-form-msg" class="form-msg" role="status" aria-live="polite"></div>
+
+            <div class="form-foot">
+              <button type="submit" class="btn btn-primary btn-lg">Create Session &amp; Open Courts</button>
+              <a href="app?demo=1" class="text-link">Or load sample club →</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-inner">
+        <a href="#top" class="nav-brand">
+          <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+            <circle cx="256" cy="256" r="240" fill="var(--accent)"/>
+            <path d="M180 180l152 152M332 180L180 332" stroke="var(--accent-ink)" stroke-width="56" stroke-linecap="round"/>
+          </svg>
+          <span>Pickle <span class="x">X</span> Matcher</span>
+        </a>
+
+        <nav class="footer-links" aria-label="Footer">
+          <a href="app">Launch Matcher</a>
+          <a href="app?demo=1">Sample Club</a>
+          <a href="#demo">Live Demo</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#start">Quick Start</a>
+        </nav>
+
+        <button type="button" id="theme-toggle" class="btn btn-sm btn-ghost">Switch to dark mode</button>
+      </div>
+
+      <div class="footer-bottom">
+        <span>Pickle X Matcher · Smart open-play queue and court matchmaking for pickleball.</span>
+        <span>Runs offline on your device · Optional real-time sync with Supabase</span>
+      </div>
+    </div>
+  </footer>
+
   <script src="vendor/qrcode.js"></script>
   <script src="eta.js"></script>
-  <script src="cloud.js"></script>
-  <script src="app.js"></script>
+  <script src="landing.js"></script>
 </body>
 </html>

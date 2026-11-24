@@ -235,8 +235,8 @@ window.PXCloud = (() => {
     if (document.visibilityState === 'visible' && club) refresh();
   });
 
-  // Root path -> bare origin, so it matches a Supabase Redirect URL entry like https://pickle-x-matcher.vercel.app
-  const redirectUrl = () => location.origin + (location.pathname === '/' ? '' : location.pathname.replace(/index.html$/, ''));
+  // Preserve /app.html when running from the app route; root falls back to bare origin.
+  const redirectUrl = () => location.origin + (location.pathname === '/' ? '' : location.pathname.replace(/index\.html$/, ''));
 
   const fail = (error) => { if (error) throw new Error(error.message || String(error)); };
 

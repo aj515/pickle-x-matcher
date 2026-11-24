@@ -4,6 +4,7 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": "public",
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/(sw.js|version.js|config.js)",
