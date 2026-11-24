@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0F0C">
+  <meta name="description" content="Live courts, queue and your personal wait time.">
+  <title>Live Board · Pickle X Matcher</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="board-page">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+        <circle cx="256" cy="256" r="240" fill="var(--accent)"/>
+        <path d="M180 180l152 152M332 180L180 332" stroke="var(--accent-ink)" stroke-width="56" stroke-linecap="round"/>
+      </svg>
+      <span id="club-name">Live Board</span>
+    </div>
+    <span class="live-pill" id="live"><span class="dot"></span><span id="updated">Connecting…</span></span>
+  </header>
+  <main id="board" aria-live="polite"></main>
+  <div id="toast" role="status"></div>
+
+  <script src="config.js"></script>
+  <script src="vendor/qrcode.js"></script>
+  <script src="eta.js"></script>
+  <script src="board.js"></script>
+</body>
+</html>

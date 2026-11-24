@@ -1,0 +1,18 @@
+{
+  "name": "pickle-x-matcher",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Smart open-play queue and court matchmaking for pickleball.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && npx --yes serve public"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0",
+    "qrcode-generator": "2.0.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.local
+.vercel/
+public/config.js
+public/version.js
+public/vendor/
+
+.vercel
+.env*
+!.env.example
