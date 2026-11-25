@@ -3,7 +3,7 @@
 // falling back to the cache when offline. Supabase API calls are never cached.
 importScripts('version.js'); // defines self.PXM_VERSION (generated at build time)
 const CACHE = 'pxm-' + (self.PXM_VERSION || 'dev');
-const SHELL = ['./', 'index.html', 'app.html', 'landing.css', 'landing.js', 'styles.css', 'eta.js', 'cloud.js', 'app.js', 'config.js', 'vendor/supabase.js', 'vendor/qrcode.js',
+const SHELL = ['./', 'index.html', 'app.html', 'landing.css', 'landing.js', 'styles.css', 'audio.js', 'eta.js', 'cloud.js', 'app.js', 'config.js', 'vendor/supabase.js', 'vendor/qrcode.js', 'vendor/jsqr.js',
   'board.html', 'board.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => {

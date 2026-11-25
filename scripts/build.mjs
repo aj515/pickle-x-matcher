@@ -33,6 +33,7 @@ const pkgDir = dirname(require.resolve('@supabase/supabase-js/package.json'));
 mkdirSync(join(pub, 'vendor'), { recursive: true });
 copyFileSync(join(pkgDir, 'dist', 'umd', 'supabase.js'), join(pub, 'vendor', 'supabase.js'));
 copyFileSync(require.resolve('qrcode-generator'), join(pub, 'vendor', 'qrcode.js'));
+copyFileSync(require.resolve('jsqr'), join(pub, 'vendor', 'jsqr.js'));
 
 const version = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) || Date.now().toString(36);
 writeFileSync(join(pub, 'version.js'), `self.PXM_VERSION = ${JSON.stringify(version)};\n`);

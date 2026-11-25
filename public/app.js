@@ -24,7 +24,12 @@
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
   const initials = (n) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) { /* ignore */ } };
+  const buzz = (pattern = 10) => {
+    try {
+      if (window.PXAudio) window.PXAudio.buzz(pattern);
+      else if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch (e) { /* ignore */ }
+  };
 
   function ago(t) {
     if (!t) return '';
@@ -40,6 +45,9 @@
     court: '<svg class="big-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18M12 4v5M12 15v5"/></svg>',
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
     qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>',
+    camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+    soundOn: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>',
+    soundOff: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>',
   };
 
   function qrSvg(text) {
@@ -411,6 +419,7 @@
     root.classList.add('open');
   }
   function closeSheet() {
+    stopScanner();
     const root = $('#sheet-root');
     root.classList.remove('open');
     root.innerHTML = '';
@@ -429,10 +438,20 @@
     document.body.classList.toggle('gated', !!gate);
     $('#undo').hidden = !undoSnap || !!gate;
     renderSync();
+    renderSoundBtn();
     const v = $('#view');
     if (gate) { v.innerHTML = viewGate(); return; }
     $$('.tabbar [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
     v.innerHTML = tab === 'players' ? viewPlayers() : tab === 'stats' ? viewStats() : tab === 'settings' ? viewSettings() : viewLive();
+  }
+
+  function renderSoundBtn() {
+    const el = $('#sound-toggle');
+    if (!el || !window.PXAudio) return;
+    const on = window.PXAudio.isEnabled();
+    el.innerHTML = on ? ICON.soundOn : ICON.soundOff;
+    el.className = 'btn ghost sm icon-only sound-btn' + (on ? ' on' : ' off');
+    el.title = on ? 'Sound effects on (tap to mute)' : 'Sound effects muted (tap to enable)';
   }
 
   const SYNC_LABEL = { synced: 'Synced', syncing: 'Syncing…', pending: 'Saving…', offline: 'Offline · will sync', error: 'Sync problem · retrying', idle: '' };
@@ -660,7 +679,11 @@
         <input id="search" class="input" type="search" placeholder="Search roster" value="${esc(search)}" autocomplete="off">
         <button class="btn primary" data-act="add">+ Add</button>
       </div>
-      <div class="row"><button class="btn ghost sm" data-act="bulk">Bulk add</button><button class="btn ghost sm" data-act="checkin-all">Check in all</button></div>
+      <div class="row">
+        <button class="btn sm scan-qr-btn" data-act="scan-qr" title="Scan player QR pass">${ICON.camera} Scan QR</button>
+        <button class="btn ghost sm" data-act="bulk">Bulk add</button>
+        <button class="btn ghost sm" data-act="checkin-all">Check in all</button>
+      </div>
       <div id="plist">${playerList()}</div>`;
   }
 
@@ -677,6 +700,7 @@
         <span class="avatar">${esc(initials(p.name))}</span>
         <span class="main"><span class="t">${esc(p.name)}</span><span class="s">${lvl(p.level)}${s.games ? ` · ${s.wins}-${s.losses}` : ''}${partnerOf(p) ? ` · <span class="duo">${ICON.link}${esc(partnerOf(p).name)}</span>` : ''}</span></span>
         ${here ? `<span class="status ${p.status}">${label[p.status]}</span>` : ''}
+        <button class="icon-btn pass-btn" data-act="player-qr" data-pid="${p.id}" title="Show Player QR Pass" aria-label="QR Pass">${ICON.qr}</button>
         ${p.status === 'playing' ? '' : `<button class="checkin ${here ? 'on' : ''}" data-act="toggle-in" data-pid="${p.id}">${here ? 'Here ✓' : 'Check in'}</button>`}
       </div>`;
     };
@@ -858,8 +882,282 @@
           <button class="btn sm" data-act="partner-pick" data-pid="${pid}">${p.partnerId ? 'Change' : 'Lock partner'}</button>
         </div>
         <button class="btn primary block" data-act="edit-save" data-pid="${pid}">Save changes</button>
+        <button class="btn ghost block" data-act="player-qr" data-pid="${pid}">${ICON.qr} View Player QR Pass</button>
         ${p.status === 'playing' ? '' : `<button class="btn ghost danger block" data-act="remove" data-pid="${pid}">Remove from roster</button>`}
       </div>`);
+  }
+
+  // ======================================================================
+  // Camera QR Scanner & Player QR Pass
+  // ======================================================================
+  let scannerStream = null;
+  let scannerInterval = null;
+  let scannerFacing = 'environment';
+  let scannerLastCode = '';
+  let scannerLastTime = 0;
+
+  function stopScanner() {
+    if (scannerInterval) {
+      clearInterval(scannerInterval);
+      scannerInterval = null;
+    }
+    if (scannerStream) {
+      try {
+        scannerStream.getTracks().forEach((t) => t.stop());
+      } catch (e) {}
+      scannerStream = null;
+    }
+    scannerLastCode = '';
+  }
+
+  function handleCheckInPayload(rawText) {
+    if (!rawText) return;
+    const now = Date.now();
+    if (rawText === scannerLastCode && now - scannerLastTime < 2400) return;
+    scannerLastCode = rawText;
+    scannerLastTime = now;
+
+    let targetId = null;
+    let targetName = null;
+
+    if (rawText.startsWith('pxm:player:')) {
+      const parts = rawText.split(':');
+      targetId = parts[2];
+      targetName = parts.slice(3).join(':');
+    } else if (rawText.startsWith('{') && rawText.endsWith('}')) {
+      try {
+        const obj = JSON.parse(rawText);
+        targetId = obj.id || null;
+        targetName = obj.name || null;
+      } catch (e) {}
+    } else if (rawText.includes('board.html') || rawText.includes('?c=')) {
+      toast('Scanned venue board link');
+      if (window.PXAudio) window.PXAudio.play('pop');
+      return;
+    } else {
+      targetName = rawText.trim();
+    }
+
+    let player = targetId ? P(targetId) : null;
+    if (!player && targetName) {
+      const clean = targetName.toLowerCase().trim();
+      player = roster().find((p) => p.name.toLowerCase().trim() === clean);
+    }
+
+    const badge = $('#scanner-status');
+    const resultBox = $('#scanner-result');
+
+    if (player) {
+      if (player.status === 'playing') {
+        if (window.PXAudio) window.PXAudio.play('error');
+        if (badge) {
+          badge.className = 'scanner-badge warn';
+          badge.textContent = `${player.name} is on court`;
+        }
+        toast(`${player.name} is on court`);
+        return;
+      }
+      if (player.status === 'queue') {
+        if (window.PXAudio) window.PXAudio.play('pop');
+        const pos = queue().findIndex((x) => x.id === player.id) + 1;
+        if (badge) {
+          badge.className = 'scanner-badge info';
+          badge.textContent = `${player.name} in line (#${pos})`;
+        }
+        toast(`${player.name} is already #${pos} in line`);
+        return;
+      }
+
+      snap();
+      enqueue(player);
+      commit();
+      if (window.PXAudio) window.PXAudio.play('scanSuccess');
+      const pos = queue().length;
+
+      if (badge) {
+        badge.className = 'scanner-badge success';
+        badge.textContent = `✓ Checked in ${player.name} (#${pos})`;
+      }
+      if (resultBox) {
+        resultBox.hidden = false;
+        resultBox.innerHTML = `
+          <div class="scan-player-card">
+            <span class="avatar">${esc(initials(player.name))}</span>
+            <div class="main">
+              <b>${esc(player.name)}</b>
+              <small>Rating ${lvl(player.level)} · Spot #${pos} in line</small>
+            </div>
+            <span class="status queue">Waiting ✓</span>
+          </div>`;
+      }
+      toast(`Checked in ${player.name} · #${pos} in line`, true);
+    } else if (targetName) {
+      if (window.PXAudio) window.PXAudio.play('pop');
+      if (badge) {
+        badge.className = 'scanner-badge info';
+        badge.textContent = `New player: ${targetName}`;
+      }
+      if (resultBox) {
+        resultBox.hidden = false;
+        resultBox.innerHTML = `
+          <div class="scan-player-card">
+            <div class="main">
+              <b>"${esc(targetName)}"</b>
+              <small>Not on roster yet</small>
+            </div>
+            <button class="btn primary sm" data-act="quick-add-scanned" data-name="${esc(targetName)}">Add & Check In</button>
+          </div>`;
+      }
+    }
+  }
+
+  async function startScannerVideo() {
+    stopScanner();
+    const video = $('#scanner-video');
+    const badge = $('#scanner-status');
+    if (!video) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (badge) {
+        badge.className = 'scanner-badge error';
+        badge.textContent = 'Camera not available in this browser';
+      }
+      return;
+    }
+
+    try {
+      if (badge) {
+        badge.className = 'scanner-badge';
+        badge.textContent = 'Starting camera…';
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: scannerFacing },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      });
+      scannerStream = stream;
+      video.srcObject = stream;
+      await video.play();
+
+      if (badge) {
+        badge.className = 'scanner-badge ready';
+        badge.textContent = 'Point camera at player QR pass';
+      }
+
+      let detector = null;
+      if ('BarcodeDetector' in window) {
+        try {
+          detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        } catch (e) {
+          detector = null;
+        }
+      }
+
+      const canvas = $('#scanner-canvas') || document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      scannerInterval = setInterval(async () => {
+        if (!video || video.readyState < video.HAVE_CURRENT_DATA) return;
+
+        if (detector) {
+          try {
+            const codes = await detector.detect(video);
+            if (codes && codes.length > 0 && codes[0].rawValue) {
+              handleCheckInPayload(codes[0].rawValue);
+              return;
+            }
+          } catch (e) {}
+        }
+
+        if (window.jsQR) {
+          try {
+            const w = video.videoWidth || 640;
+            const h = video.videoHeight || 480;
+            canvas.width = Math.min(w, 480);
+            canvas.height = Math.round((canvas.width / w) * h);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const qr = window.jsQR(imgData.data, imgData.width, imgData.height, {
+              inversionAttempts: 'dontInvert',
+            });
+            if (qr && qr.data) {
+              handleCheckInPayload(qr.data);
+            }
+          } catch (e) {}
+        }
+      }, 180);
+    } catch (err) {
+      if (badge) {
+        badge.className = 'scanner-badge error';
+        badge.textContent = err.name === 'NotAllowedError' ? 'Camera permission denied' : 'Could not access camera';
+      }
+    }
+  }
+
+  function scanQRSheet() {
+    openSheet(`
+      <div class="scanner-modal">
+        <div class="scanner-header">
+          <h3>Camera QR Check-In</h3>
+          <button class="btn ghost sm icon-only" data-act="close-sheet">✕</button>
+        </div>
+        <p class="sub">Point camera at any player's QR Pass to check them in immediately.</p>
+        <div class="scanner-viewfinder-box">
+          <video id="scanner-video" playsinline autoplay muted></video>
+          <canvas id="scanner-canvas" hidden></canvas>
+          <div class="scanner-overlay">
+            <div class="scanner-target">
+              <div class="scanner-laser"></div>
+              <span class="corner tl"></span>
+              <span class="corner tr"></span>
+              <span class="corner bl"></span>
+              <span class="corner br"></span>
+            </div>
+          </div>
+          <div class="scanner-badge" id="scanner-status">Starting camera…</div>
+        </div>
+        <div class="scanner-controls">
+          <button class="btn sm" data-act="flip-camera">Flip Camera</button>
+          <button class="btn sm ghost" data-act="close-sheet">Done Scanning</button>
+        </div>
+        <div id="scanner-result" class="scanner-result-card" hidden></div>
+        <div class="scanner-manual">
+          <span class="lbl">Or type name to check in</span>
+          <div class="toolbar" style="margin:4px 0 0">
+            <input class="input" id="scanner-manual-name" placeholder="Player name">
+            <button class="btn primary sm" data-act="scanner-manual-submit">Check In</button>
+          </div>
+        </div>
+      </div>
+    `);
+    startScannerVideo();
+  }
+
+  function playerQRSheet(pid) {
+    const p = P(pid);
+    if (!p) return;
+    const payload = `pxm:player:${p.id}:${p.name}`;
+    const qr = qrSvg(payload);
+    openSheet(`
+      <div class="player-pass-sheet">
+        <h3>Player QR Pass</h3>
+        <p class="sub">Show this to the session organizer to check in with one camera scan.</p>
+        <div class="pass-card">
+          <div class="pass-header">
+            <span class="avatar lg">${esc(initials(p.name))}</span>
+            <div class="pass-meta">
+              <b>${esc(p.name)}</b>
+              <span>Skill Rating ${lvl(p.level)}</span>
+            </div>
+          </div>
+          <div class="qr-box pass-qr">${qr}</div>
+          <div class="pass-footer">Pickle X Matcher · Fast Pass</div>
+        </div>
+        <button class="btn primary block lg" style="margin-top:14px" data-act="close-sheet">Done</button>
+      </div>
+    `);
   }
 
   // ======================================================================
@@ -874,6 +1172,45 @@
 
   const A = {
     close: closeSheet,
+    'close-sheet': closeSheet,
+    'toggle-sound'() {
+      if (window.PXAudio) {
+        const on = window.PXAudio.toggle();
+        renderSoundBtn();
+        toast(on ? 'Sound effects enabled 🔊' : 'Sound effects muted 🔇');
+      }
+    },
+    'scan-qr'() {
+      scanQRSheet();
+    },
+    'flip-camera'() {
+      scannerFacing = scannerFacing === 'environment' ? 'user' : 'environment';
+      startScannerVideo();
+    },
+    'player-qr'(d) {
+      playerQRSheet(d.pid);
+    },
+    'quick-add-scanned'(d) {
+      const p = addPlayer(d.name, 3.0, true);
+      if (p) {
+        commit();
+        if (window.PXAudio) window.PXAudio.play('scanSuccess');
+        toast(`Added & checked in ${d.name}`, true);
+        const badge = $('#scanner-status');
+        if (badge) {
+          badge.className = 'scanner-badge success';
+          badge.textContent = `✓ Checked in ${d.name}`;
+        }
+        const res = $('#scanner-result');
+        if (res) res.hidden = true;
+      }
+    },
+    'scanner-manual-submit'() {
+      const inp = $('#scanner-manual-name');
+      if (!inp || !inp.value.trim()) return;
+      handleCheckInPayload(inp.value.trim());
+      inp.value = '';
+    },
 
     // ----- Cloud / account -----
     async auth(d, el) {
@@ -991,11 +1328,14 @@
     undo() {
       if (!undoSnap) return;
       S = JSON.parse(undoSnap); undoSnap = null;
-      closeSheet(); commit(); toast('Undone');
+      closeSheet(); commit();
+      if (window.PXAudio) window.PXAudio.play('undo');
+      toast('Undone');
     },
     tab(d) {
       tab = d.tab;
       try { localStorage.setItem(TAB_KEY, tab); } catch (e) { /* ignore */ }
+      if (window.PXAudio) window.PXAudio.play('pop');
       render(); window.scrollTo(0, 0);
     },
 
@@ -1004,12 +1344,14 @@
       snap();
       const n = fillCourts();
       commit(); buzz();
+      if (n > 0 && window.PXAudio) window.PXAudio.play('matchStart');
       toast(n ? `${plural(n, 'court')} started` : `Need ${need()} players waiting`, n > 0);
     },
     assign(d) {
       const c = court(d.id), m = pickMatch();
       if (!m) return toast(`Need ${need()} players waiting`);
       snap(); startMatch(c, m); commit(); buzz();
+      if (window.PXAudio) window.PXAudio.play('matchStart');
       toast(`${c.name} is live`, true);
     },
     manual(d) {
@@ -1027,6 +1369,7 @@
       if (set.has(d.pid)) set.delete(d.pid);
       else if (set.size < need()) set.add(d.pid);
       else return toast(`Only ${need()} players per game`);
+      if (window.PXAudio) window.PXAudio.play('pop');
       el.classList.toggle('soon', set.has(d.pid));
       el.querySelector('.pos').style.opacity = set.has(d.pid) ? '1' : '.25';
       const go = $('#pick-go'), left = need() - set.size;
@@ -1037,18 +1380,21 @@
       const ids = Array.from(sheetState.picked || []);
       if (ids.length !== need()) return;
       snap(); startMatch(court(d.id), bestSplit(ids)); closeSheet(); commit(); buzz();
+      if (window.PXAudio) window.PXAudio.play('matchStart');
       toast(`${court(d.id).name} is live`, true);
     },
     score(d) { scoreSheet(d.id); },
     sc(d) {
       const inp = $('#sc-' + d.t);
       inp.value = Math.max(0, Math.min(99, (parseInt(inp.value, 10) || 0) + Number(d.d)));
+      if (window.PXAudio) window.PXAudio.play('scorePoint');
       updateHint();
     },
     'quick-win'(d) {
       const g = S.settings.gameTo, other = $('#sc-' + (d.t === 'a' ? 'b' : 'a'));
       const o = parseInt(other.value, 10) || 0;
       $('#sc-' + d.t).value = o >= g - 1 ? o + S.settings.winBy : g;
+      if (window.PXAudio) window.PXAudio.play('scorePoint');
       updateHint();
     },
     'save-score'(d) {
@@ -1217,13 +1563,21 @@
       const outs = roster().filter((p) => p.status === 'out');
       if (!outs.length) return toast('Everyone is already checked in');
       snap(); shuffle(outs).forEach((p) => enqueue(p)); commit();
+      if (window.PXAudio) window.PXAudio.play('checkin');
       toast(`Checked in ${plural(outs.length, 'player')}`, true);
     },
     'toggle-in'(d) {
       const p = P(d.pid);
       if (p.status === 'playing') return toast(`${p.name} is on court`);
-      if (p.status === 'out') { enqueue(p); toast(`${p.name} checked in · #${queue().length} in line`); }
-      else { p.status = 'out'; toast(`${p.name} checked out`); }
+      if (p.status === 'out') {
+        enqueue(p);
+        if (window.PXAudio) window.PXAudio.play('checkin');
+        toast(`${p.name} checked in · #${queue().length} in line`);
+      } else {
+        p.status = 'out';
+        if (window.PXAudio) window.PXAudio.play('pop');
+        toast(`${p.name} checked out`);
+      }
       buzz(); commit();
     },
     edit(d) { editSheet(d.pid); },
@@ -1310,6 +1664,7 @@
     snap();
     const W = finishMatch(c, sa, sb, winner);
     closeSheet(); commit(); buzz();
+    if (window.PXAudio) window.PXAudio.play('victory');
     const score = sa == null ? '' : ` ${Math.max(sa, sb)}-${Math.min(sa, sb)}`;
     toast(`${W.map(nm).join(' & ')} win${W.length === 1 ? 's' : ''}${score}`, true);
   }

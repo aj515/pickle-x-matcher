@@ -182,9 +182,12 @@
   }
 
   function alertMe(msg) {
+    if (window.PXAudio) {
+      window.PXAudio.play('whistle');
+    }
     try { navigator.vibrate && navigator.vibrate([300, 120, 300, 120, 500]); } catch (e) { /* ignore */ }
     try {
-      if (audio) {
+      if (audio && !window.PXAudio) {
         [0, 0.25, 0.5].forEach((t) => {
           const o = audio.createOscillator(), g = audio.createGain();
           o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
